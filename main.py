@@ -1,47 +1,103 @@
 import requests
 import time
-import json
+import random
 from datetime import datetime, timedelta
 
 # ================= CONFIG =================
 TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
 CHAT_ID = "6366949018"
+
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 # ================= TIME =================
 vn_offset = timedelta(hours=7)
 
-def now():
+def now_vn():
     return datetime.utcnow() + vn_offset
 
 # ================= SEND =================
 def send(msg):
     try:
-        requests.post(BASE_URL, data={"chat_id": CHAT_ID, "text": msg}, timeout=10)
-        print("✅", msg[:40])
+        requests.post(
+            BASE_URL,
+            data={"chat_id": CHAT_ID, "text": msg},
+            timeout=10
+        )
+        print("✅ SENT:", msg[:40])
     except Exception as e:
-        print("❌", e)
+        print("❌ EXCEPTION:", e)
 
-# ================= STORAGE =================
-FILE = "stats.json"
+# ================= FOOD SYSTEM (UPGRADED) =================
+breakfasts = [
+    "Bánh mì trứng + sữa",
+    "Xôi gà + cà phê đen",
+    "Yến mạch + chuối + sữa chua",
+    "Bún bò nhẹ buổi sáng",
+    "Trứng ốp la + bánh mì + trái cây"
+]
 
-def load():
-    try:
-        return json.load(open(FILE, "r"))
-    except:
-        return {
-            "xp": 0,
-            "level": 1,
-            "streak": 0,
-            "miss": {},
-            "done": {},
-            "hard": 0
-        }
+lunches = [
+    "Cơm gà + rau luộc + canh",
+    "Cơm cá + rau xào + trứng",
+    "Bún thịt nướng + rau nhiều",
+    "Cơm thịt nạc + canh rau",
+    "Phở bò + thêm trứng"
+]
 
-def save(data):
-    json.dump(data, open(FILE, "w"))
+dinners = [
+    "Cơm cá + rau luộc (ít dầu)",
+    "Ức gà + khoai lang + salad",
+    "Trứng + rau + cơm ít",
+    "Phở nhẹ / bún nhẹ",
+    "Cá hồi (hoặc cá thường) + rau xanh"
+]
 
-data = load()
+snacks = [
+    "Chuối / táo",
+    "Sữa chua không đường",
+    "Hạt điều / hạnh nhân",
+    "Protein nhẹ (trứng)",
+]
+
+# ================= GYM SYSTEM (UPGRADED) =================
+workouts = ["PUSH", "PULL", "LEGS"]
+
+def get_workout(day):
+    w = workouts[day % 3]
+
+    if w == "PUSH":
+        return """💪 PUSH DAY
+- Bench Press: 4x8-10
+- Incline Dumbbell: 3x10
+- Shoulder Press: 4x10
+- Lateral Raise: 3x15
+- Triceps Pushdown: 3x12
+🔥 Focus: ngực + vai + tay sau"""
+
+    if w == "PULL":
+        return """🧲 PULL DAY
+- Lat Pulldown: 4x10
+- Barbell Row: 4x8-10
+- Seated Row: 3x12
+- Biceps Curl: 3x12
+- Hammer Curl: 3x12
+🔥 Focus: lưng + tay trước"""
+
+    return """🦵 LEGS DAY
+- Squat: 4x8-10
+- Leg Press: 4x12
+- Leg Curl: 3x12
+- Calf Raise: 4x15
+🔥 Focus: chân + core"""
+
+# ================= LIFESTYLE SYSTEM =================
+life_tips = [
+    "💧 Uống nước đều mỗi 60–90 phút",
+    "🧠 Làm việc 50 phút nghỉ 10 phút (focus mode)",
+    "📵 Tránh điện thoại trong deep work",
+    "🚶 Đi bộ 5–10 phút sau mỗi bữa ăn",
+    "😴 Ngủ đủ 7–8 tiếng"
+]
 
 # ================= SCHEDULE =================
 schedule = {
@@ -49,93 +105,68 @@ schedule = {
     "05:45": "🍌 Pre-workout",
     "06:00": "🏋️ TẬP NGAY",
     "07:15": "🍳 Ăn sáng",
-    "09:00": "🔥 Deep Work",
+    "08:30": "🧠 Reset + chuẩn bị đầu óc",
+    "09:00": "🔥 Deep Work 1",
+    "10:30": "💧 Uống nước + nghỉ ngắn",
+    "11:30": "🍵 Nghỉ nhẹ",
     "12:00": "🍱 Ăn trưa",
-    "12:10": "🍱 cc è",
+    "12:16": "🍱 test lần cuối",
+    "13:00": "⚙️ Deep Work 2",
+    "15:00": "💧 Uống nước",
+    "15:15": "🧠 Work nhẹ / edit",
+    "17:00": "⛔ Kết thúc công việc",
+    "17:30": "🍳 Nấu cơm tối",
     "18:00": "🍽️ Ăn tối",
+    "20:00": "📚 Học kiến thức mới",
+    "22:30": "💧 Uống nước",
     "23:00": "😴 Ngủ"
 }
 
-# ================= AI (RULE-BASED) =================
-def brain():
-    miss_total = sum(data["miss"].values())
-
-    if miss_total >= 3:
-        data["hard"] = 1
-    else:
-        data["hard"] = 0
-
-# ================= XP SYSTEM =================
-def reward(ok):
-    if ok:
-        data["xp"] += 10
-        data["streak"] += 1
-    else:
-        data["xp"] -= 5
-        data["streak"] = 0
-
-    if data["xp"] < 0:
-        data["xp"] = 0
-
-    data["level"] = data["xp"] // 100 + 1
-
 # ================= STATE =================
-last_sent = {}
-last_alert = {}
-current_day = now().day
+sent_today = set()
+current_day = now_vn().day
 
-print("👑 GOD SYSTEM STARTED")
-send("👑 GOD SYSTEM ONLINE")
+print("🚀 BOT RUNNING")
+send("🚀 BOT ONLINE")
 
-# ================= LOOP =================
+# ================= MAIN LOOP =================
 while True:
-    try:
-        t = now()
-        hm = t.strftime("%H:%M")
+    now_dt = now_vn()
+    now = now_dt.strftime("%H:%M")
 
-        # reset ngày
-        if t.day != current_day:
-            data = load()
-            current_day = t.day
+    if now_dt.day != current_day:
+        sent_today.clear()
+        current_day = now_dt.day
 
-        brain()
+    for t in schedule:
 
-        for time_key, task in schedule.items():
+        if now == t and t not in sent_today:
 
-            key = f"{current_day}_{time_key}"
+            msg = schedule[t]
 
-            # ================= TASK EXEC =================
-            if hm == time_key and last_sent.get(key) != hm:
+            # ================= FOOD UPGRADE =================
+            if t == "07:15":
+                msg = "🍳 Ăn sáng\n👉 " + random.choice(breakfasts)
 
-                msg = f"📌 {task}"
+            elif t == "12:00":
+                msg = "🍱 Ăn trưa\n👉 " + random.choice(lunches)
 
-                if data["hard"]:
-                    msg = "🔥 HARD MODE\n" + msg
+            elif t == "18:00":
+                msg = "🍽️ Ăn tối\n👉 " + random.choice(dinners)
 
-                send(msg)
+            elif t == "10:30":
+                msg = "💧 Nghỉ + snack\n👉 " + random.choice(snacks)
 
-                last_sent[key] = hm
-                reward(True)
+            elif t == "06:00":
+                msg = "💀 Không tập = không có body\n" + get_workout(current_day)
 
-        # ================= MISS CHECK =================
-        for time_key in schedule:
+            elif t == "08:30":
+                msg = "🧠 RESET MINDSET\n👉 " + random.choice(life_tips)
 
-            key = f"{current_day}_{time_key}"
+            elif t == "20:00":
+                msg = "📚 HỌC + PHÁT TRIỂN BẢN THÂN\n👉 " + random.choice(life_tips)
 
-            if hm > time_key and last_sent.get(key) != time_key:
+            send(msg)
+            sent_today.add(t)
 
-                if not last_alert.get(key):
-
-                    send(f"🔔 MISS TASK: {time_key}")
-                    data["miss"][str(current_day)] = data["miss"].get(str(current_day), 0) + 1
-                    last_alert[key] = True
-
-                    reward(False)
-
-        save(data)
-
-        time.sleep(2)
-
-    except Exception as e:
-        print("🔥 ERROR:", e)
-        time.sleep(5)
+    time.sleep(1)
