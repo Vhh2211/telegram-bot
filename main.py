@@ -1,55 +1,47 @@
 import requests
 import time
+import json
 from datetime import datetime, timedelta
 
 # ================= CONFIG =================
 TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
 CHAT_ID = "6366949018"
-
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-# ================= TIMEZONE (UTC+7) =================
+# ================= TIME =================
 vn_offset = timedelta(hours=7)
 
-def now_vn():
+def now():
     return datetime.utcnow() + vn_offset
 
 # ================= SEND =================
 def send(msg):
     try:
-        res = requests.post(
-            BASE_URL,
-            data={"chat_id": CHAT_ID, "text": msg},
-            timeout=10
-        )
-
-        if res.status_code == 200:
-            print("✅ SENT:", msg[:40])
-        else:
-            print("⚠️ ERROR:", res.text)
-
+        requests.post(BASE_URL, data={"chat_id": CHAT_ID, "text": msg}, timeout=10)
+        print("✅", msg[:40])
     except Exception as e:
-        print("❌ EXCEPTION:", e)
+        print("❌", e)
 
+# ================= STORAGE =================
+FILE = "stats.json"
 
-# ================= DATA =================
-breakfasts = ["Bánh mì trứng", "Xôi gà", "Cháo thịt", "Bánh mì pate"]
-lunches = ["Cơm gà", "Cơm cá", "Bún thịt nướng", "Cơm thịt trứng"]
-dinners = ["Cơm cá", "Phở bò", "Bún bò", "Cơm trứng"]
+def load():
+    try:
+        return json.load(open(FILE, "r"))
+    except:
+        return {
+            "xp": 0,
+            "level": 1,
+            "streak": 0,
+            "miss": {},
+            "done": {},
+            "hard": 0
+        }
 
-workouts = ["PUSH", "PULL", "LEGS"]
+def save(data):
+    json.dump(data, open(FILE, "w"))
 
-def get_workout(day):
-    w = workouts[day % 3]
-
-    if w == "PUSH":
-        return "💪 PUSH\nBench 4x10\nShoulder 4x10\nTricep 3x12"
-
-    if w == "PULL":
-        return "🧲 PULL\nLat 4x10\nRow 4x10\nBicep 3x12"
-
-    return "🦵 LEGS\nSquat 4x10\nLeg 4x12\nCalf 4x15"
-
+data = load()
 
 # ================= SCHEDULE =================
 schedule = {
@@ -57,62 +49,93 @@ schedule = {
     "05:45": "🍌 Pre-workout",
     "06:00": "🏋️ TẬP NGAY",
     "07:15": "🍳 Ăn sáng",
-    "08:30": "🧠 Chuẩn bị + reset đầu óc",
-    "09:00": "🔥 Deep Work 1",
-    "10:30": "💧 Uống nước",
-    "11:30": "🍵 Nghỉ nhẹ",
-    "11:59": "tao nè",
+    "09:00": "🔥 Deep Work",
     "12:00": "🍱 Ăn trưa",
-    "13:00": "⚙️ Deep Work 2",
-    "15:00": "💧 Uống nước",
-    "15:15": "🧠 Work nhẹ",
-    "17:00": "⛔ Kết thúc công việc",
-    "17:30": "🍳 Nấu cơm tối",
+    "12:10": "🍱 cc è",
     "18:00": "🍽️ Ăn tối",
-    "20:00": "📚 Học kiến thức mới",
-    "22:30": "💧 Uống nước",
     "23:00": "😴 Ngủ"
 }
 
+# ================= AI (RULE-BASED) =================
+def brain():
+    miss_total = sum(data["miss"].values())
+
+    if miss_total >= 3:
+        data["hard"] = 1
+    else:
+        data["hard"] = 0
+
+# ================= XP SYSTEM =================
+def reward(ok):
+    if ok:
+        data["xp"] += 10
+        data["streak"] += 1
+    else:
+        data["xp"] -= 5
+        data["streak"] = 0
+
+    if data["xp"] < 0:
+        data["xp"] = 0
+
+    data["level"] = data["xp"] // 100 + 1
+
 # ================= STATE =================
-sent_today = set()
-current_day = now_vn().day
+last_sent = {}
+last_alert = {}
+current_day = now().day
 
-print("🚀 BOT RUNNING")
-send("🚀 BOT ONLINE")
+print("👑 GOD SYSTEM STARTED")
+send("👑 GOD SYSTEM ONLINE")
 
-# ================= MAIN LOOP =================
+# ================= LOOP =================
 while True:
-    now_dt = now_vn()
-    now = now_dt.strftime("%H:%M")
+    try:
+        t = now()
+        hm = t.strftime("%H:%M")
 
-    # reset ngày mới
-    if now_dt.day != current_day:
-        sent_today.clear()
-        current_day = now_dt.day
-        print("🔄 RESET DAY")
+        # reset ngày
+        if t.day != current_day:
+            data = load()
+            current_day = t.day
 
-    print("CHECK TIME:", now)
+        brain()
 
-    for t in schedule:
+        for time_key, task in schedule.items():
 
-        if now == t and t not in sent_today:
+            key = f"{current_day}_{time_key}"
 
-            msg = schedule[t]
+            # ================= TASK EXEC =================
+            if hm == time_key and last_sent.get(key) != hm:
 
-            if t == "07:15":
-                msg = "🍳 Ăn sáng\n👉 " + breakfasts[current_day % len(breakfasts)]
+                msg = f"📌 {task}"
 
-            elif t == "12:00":
-                msg = "🍱 Ăn trưa\n👉 " + lunches[current_day % len(lunches)]
+                if data["hard"]:
+                    msg = "🔥 HARD MODE\n" + msg
 
-            elif t == "18:00":
-                msg = "🍽️ Ăn tối\n👉 " + dinners[current_day % len(dinners)]
+                send(msg)
 
-            elif t == "06:00":
-                msg = "💀 Không tập = không có body\n" + get_workout(current_day)
+                last_sent[key] = hm
+                reward(True)
 
-            send(msg)
-            sent_today.add(t)
+        # ================= MISS CHECK =================
+        for time_key in schedule:
 
-    time.sleep(1)
+            key = f"{current_day}_{time_key}"
+
+            if hm > time_key and last_sent.get(key) != time_key:
+
+                if not last_alert.get(key):
+
+                    send(f"🔔 MISS TASK: {time_key}")
+                    data["miss"][str(current_day)] = data["miss"].get(str(current_day), 0) + 1
+                    last_alert[key] = True
+
+                    reward(False)
+
+        save(data)
+
+        time.sleep(2)
+
+    except Exception as e:
+        print("🔥 ERROR:", e)
+        time.sleep(5)
