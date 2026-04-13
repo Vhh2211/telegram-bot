@@ -1,7 +1,6 @@
 import requests
 import time
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta
 
 # ================= CONFIG =================
 TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
@@ -9,8 +8,11 @@ CHAT_ID = "6366949018"
 
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-# ================= TIMEZONE =================
-vn = pytz.timezone("Asia/Ho_Chi_Minh")
+# ================= TIMEZONE (UTC+7) =================
+vn_offset = timedelta(hours=7)
+
+def now_vn():
+    return datetime.utcnow() + vn_offset
 
 # ================= SEND =================
 def send(msg):
@@ -59,7 +61,7 @@ schedule = {
     "09:00": "🔥 Deep Work 1",
     "10:30": "💧 Uống nước",
     "11:30": "🍵 Nghỉ nhẹ",
-    "11:57": "tao nè",
+    "11:59": "tao nè",
     "12:00": "🍱 Ăn trưa",
     "13:00": "⚙️ Deep Work 2",
     "15:00": "💧 Uống nước",
@@ -72,16 +74,16 @@ schedule = {
     "23:00": "😴 Ngủ"
 }
 
-# chống spam
+# ================= STATE =================
 sent_today = set()
-current_day = datetime.now(vn).day
+current_day = now_vn().day
 
 print("🚀 BOT RUNNING")
 send("🚀 BOT ONLINE")
 
 # ================= MAIN LOOP =================
 while True:
-    now_dt = datetime.now(vn)
+    now_dt = now_vn()
     now = now_dt.strftime("%H:%M")
 
     # reset ngày mới
@@ -98,7 +100,6 @@ while True:
 
             msg = schedule[t]
 
-            # custom messages
             if t == "07:15":
                 msg = "🍳 Ăn sáng\n👉 " + breakfasts[current_day % len(breakfasts)]
 
