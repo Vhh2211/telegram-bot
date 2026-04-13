@@ -47,7 +47,7 @@ schedule = {
     "07:15": "🍳 Ăn sáng",
     "08:30": "🧠 Chuẩn bị + reset đầu óc",
     "09:00": "🔥 Deep Work 1 (task quan trọng nhất)",
-    "09:15": "🔥 testbot",
+    "11:33": "🔥 testbot",
     "10:30": "💧 Uống nước",
     "11:30": "🍵 Nghỉ nhẹ / thư giãn",
     "12:00": "🍱 Ăn trưa + nghỉ",
