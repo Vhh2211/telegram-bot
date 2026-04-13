@@ -8,8 +8,7 @@ TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
 CHAT_ID = "6366949018"
 
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-print("BOT RUNNING")
-send("TEST BOT ONLINE")
+
 # ================= SEND =================
 def send(msg):
     try:
@@ -21,7 +20,8 @@ def send(msg):
         print("✅", msg[:30])
     except Exception as e:
         print("❌", e)
-
+print("BOT RUNNING")
+send("TEST BOT ONLINE")
 # ================= DATA =================
 breakfasts = ["Bánh mì trứng", "Xôi gà", "Cháo thịt", "Bánh mì pate"]
 lunches = ["Cơm gà", "Cơm cá", "Bún thịt nướng", "Cơm thịt trứng"]
