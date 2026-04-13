@@ -110,7 +110,6 @@ schedule = {
     "10:30": "💧 Uống nước + nghỉ ngắn",
     "11:30": "🍵 Nghỉ nhẹ",
     "12:00": "🍱 Ăn trưa",
-    "12:16": "🍱 test lần cuối",
     "13:00": "⚙️ Deep Work 2",
     "15:00": "💧 Uống nước",
     "15:15": "🧠 Work nhẹ / edit",
