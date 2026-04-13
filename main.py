@@ -50,7 +50,7 @@ schedule = {
     "09:00": "🔥 Deep Work 1 (task quan trọng nhất)",
     "10:30": "💧 Uống nước",
     "11:30": "🍵 Nghỉ nhẹ / thư giãn",
-    "11:37": "testbot",
+    "11:40": "testbot",
     "12:00": "🍱 Ăn trưa + nghỉ",
     "13:00": "⚙️ Deep Work 2 (task chính)",
     "15:00": "💧 Uống nước",
