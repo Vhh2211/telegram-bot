@@ -8,7 +8,8 @@ TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
 CHAT_ID = "6366949018"
 
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
+print("BOT RUNNING")
+send("TEST BOT ONLINE")
 # ================= SEND =================
 def send(msg):
     try:
