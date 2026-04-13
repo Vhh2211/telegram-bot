@@ -1,7 +1,6 @@
 import requests
 import time
 from datetime import datetime
-import os
 
 # ================= CONFIG =================
 TOKEN = "8687534018:AAEKaa-M0ZV74evpRWCX-6Rb4RPneKqOStE"
@@ -12,22 +11,28 @@ BASE_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 # ================= SEND =================
 def send(msg):
     try:
-        requests.post(
+        res = requests.post(
             BASE_URL,
             data={"chat_id": CHAT_ID, "text": msg},
             timeout=10
         )
-        print("✅", msg[:30])
+
+        if res.status_code == 200:
+            print("✅ SENT:", msg[:40])
+        else:
+            print("⚠️ ERROR:", res.text)
+
     except Exception as e:
-        print("❌", e)
-print("BOT RUNNING")
-send("TEST BOT ONLINE")
+        print("❌ EXCEPTION:", e)
+
+
 # ================= DATA =================
 breakfasts = ["Bánh mì trứng", "Xôi gà", "Cháo thịt", "Bánh mì pate"]
 lunches = ["Cơm gà", "Cơm cá", "Bún thịt nướng", "Cơm thịt trứng"]
 dinners = ["Cơm cá", "Phở bò", "Bún bò", "Cơm trứng"]
 
 workouts = ["PUSH", "PULL", "LEGS"]
+
 
 def get_workout(day):
     w = workouts[day % 3]
@@ -40,6 +45,7 @@ def get_workout(day):
 
     return "🦵 LEGS\nSquat 4x10\nLeg 4x12\nCalf 4x15"
 
+
 # ================= SCHEDULE =================
 schedule = {
     "05:30": "🌞 Dậy + uống nước",
@@ -47,14 +53,14 @@ schedule = {
     "06:00": "🏋️ TẬP NGAY",
     "07:15": "🍳 Ăn sáng",
     "08:30": "🧠 Chuẩn bị + reset đầu óc",
-    "09:00": "🔥 Deep Work 1 (task quan trọng nhất)",
+    "09:00": "🔥 Deep Work 1",
     "10:30": "💧 Uống nước",
-    "11:30": "🍵 Nghỉ nhẹ / thư giãn",
+    "11:30": "🍵 Nghỉ nhẹ",
     "11:46": "testbot",
-    "12:00": "🍱 Ăn trưa + nghỉ",
-    "13:00": "⚙️ Deep Work 2 (task chính)",
+    "12:00": "🍱 Ăn trưa",
+    "13:00": "⚙️ Deep Work 2",
     "15:00": "💧 Uống nước",
-    "15:15": "🧠 Work nhẹ / edit / upload / admin",
+    "15:15": "🧠 Work nhẹ",
     "17:00": "⛔ Kết thúc công việc",
     "17:30": "🍳 Nấu cơm tối",
     "18:00": "🍽️ Ăn tối",
@@ -63,8 +69,12 @@ schedule = {
     "23:00": "😴 Ngủ"
 }
 
-last_sent = {}
+# chống spam
+sent_today = set()
 current_day = datetime.now().day
+
+print("🚀 BOT RUNNING")
+send("🚀 BOT ONLINE")
 
 # ================= MAIN LOOP =================
 while True:
@@ -73,15 +83,17 @@ while True:
 
     # reset ngày mới
     if now_dt.day != current_day:
-        last_sent.clear()
+        sent_today.clear()
         current_day = now_dt.day
-        print("🔄 reset day")
+        print("🔄 RESET DAY")
 
     for t in schedule:
-        if now.startswith(t) and last_sent.get(t) != current_day:
+
+        if now == t and t not in sent_today:
 
             msg = schedule[t]
 
+            # custom meal/workout
             if t == "07:15":
                 msg = "🍳 Ăn sáng\n👉 " + breakfasts[current_day % len(breakfasts)]
 
@@ -95,6 +107,6 @@ while True:
                 msg = "💀 Không tập = không có body\n" + get_workout(current_day)
 
             send(msg)
-            last_sent[t] = current_day
+            sent_today.add(t)
 
-    time.sleep(10)
+    time.sleep(1)
